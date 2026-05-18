@@ -561,7 +561,7 @@ const DB_IDS = {
   knowledge: 'c01be0e7-3e28-4b4d-afd8-794fc89f57a7',
 };
 
-const PROXY = 'https://notion-api-proxy.vercel.app/api'; // see setup note below
+const PROXY = '/api/notion';// see setup note below
 // NOTE: Notion API blocks direct browser requests (CORS). This uses a tiny
 // open-source proxy. You can also self-host one — see README at the bottom.
 
@@ -622,25 +622,18 @@ async function queryDB(dbId, sorts, filter) {
   if (sorts) body.sorts = sorts;
   if (filter) body.filter = filter;
 
-  // Try direct first (works if CORS is open), fallback to proxy
-  const urls = [
-    `https://api.notion.com/v1/databases/${dbId}/query`,
-  ];
-
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${TOKEN}`,
-          'Notion-Version': '2022-06-28',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) return await res.json();
-    } catch(e) { /* try next */ }
-  }
+  try {
+    const res = await fetch(`${PROXY}?path=databases/${dbId}/query`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) return await res.json();
+  } catch(e) { console.error('Proxy error:', e); }
   return null;
 }
 
