@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 AI Operating System — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0b;
+    --bg2: #111113;
+    --bg3: #18181b;
+    --border: rgba(255,255,255,0.07);
+    --border-hi: rgba(255,255,255,0.15);
+    --text: #f0f0ee;
+    --text2: #888884;
+    --text3: #4a4a47;
+    --accent: #c8f542;
+    --accent2: #7c6af7;
+    --accent3: #f7a26a;
+    --red: #f25c54;
+    --teal: #3ecf8e;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  html { font-size: 14px; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* LAYOUT */
+  .shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: 56px 1fr;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-logo {
+    font-family: var(--font-head);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .topbar-logo span { color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .sync-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent);
+    color: #0a0a0b;
+    border: none;
+    border-radius: var(--radius);
+    padding: 6px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .sync-btn:hover { opacity: 0.85; }
+  .sync-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .sync-btn svg { width: 13px; height: 13px; }
+  .last-sync { font-size: 11px; color: var(--text3); }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 6px var(--teal);
+    display: inline-block;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .nav-section { margin-bottom: 24px; }
+  .nav-label {
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0 16px;
+    margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.12s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(200,245,66,0.05); }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.7; }
+  .nav-item.active svg { opacity: 1; }
+
+  .layer-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(124,106,247,0.2);
+    color: var(--accent2);
+    margin-left: auto;
+  }
+
+  /* MAIN CONTENT */
+  .main {
+    padding: 28px;
+    overflow-y: auto;
+  }
+
+  /* SECTION */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .section-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: var(--border-hi); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: var(--text); }
+  .stat-meta { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* ENTRY ROWS */
+  .entry-list { display: flex; flex-direction: column; gap: 1px; }
+  .entry-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg3);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.1s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .entry-row:hover { background: rgba(255,255,255,0.04); }
+  .entry-row + .entry-row { margin-top: 2px; }
+
+  .entry-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .entry-body { flex: 1; min-width: 0; }
+  .entry-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: var(--font-head);
+  }
+  .entry-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .entry-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  /* BADGES */
+  .badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 5px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-win { background: rgba(62,207,142,0.15); color: var(--teal); }
+  .badge-decision { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .badge-workflow { background: rgba(200,245,66,0.12); color: var(--accent); }
+  .badge-build { background: rgba(247,162,106,0.15); color: var(--accent3); }
+  .badge-refine { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .badge-active { background: rgba(62,207,142,0.15); color: var(--teal); }
+  .badge-review { background: rgba(255,255,255,0.08); color: var(--text2); }
+
+  /* SCORE BAR */
+  .score-bar-wrap { margin-top: 8px; }
+  .score-bar-track { height: 3px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+  .score-num { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* LOADING */
+  .loading-state {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px; gap: 12px; color: var(--text3);
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border-hi);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY */
+  .empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 13px; }
+
+  /* CONFIG MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+  }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    width: 480px;
+    max-width: 90vw;
+  }
+  .modal h2 { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.7; }
+  .modal input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+    margin-bottom: 12px;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-primary {
+    background: var(--accent); color: #0a0a0b;
+    border: none; border-radius: var(--radius);
+    padding: 8px 18px; font-family: var(--font-mono);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .btn-secondary {
+    background: transparent; color: var(--text2);
+    border: 1px solid var(--border-hi); border-radius: var(--radius);
+    padding: 8px 18px; font-family: var(--font-mono);
+    font-size: 13px; cursor: pointer;
+  }
+
+  /* ACTIVE LAYER BANNER */
+  .layer-banner {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(200,245,66,0.06);
+    border: 1px solid rgba(200,245,66,0.15);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .layer-banner .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px var(--accent); flex-shrink: 0; }
+  .layer-banner-text { font-size: 13px; color: var(--text); }
+  .layer-banner-text span { color: var(--accent); font-weight: 500; }
+
+  /* PROMPT SCORE */
+  .score-circle {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    border: 1.5px solid;
+  }
+  .score-hi { border-color: var(--teal); color: var(--teal); }
+  .score-mid { border-color: var(--accent3); color: var(--accent3); }
+  .score-lo { border-color: var(--text3); color: var(--text3); }
+
+  /* NOTION LINK */
+  .notion-open {
+    font-size: 11px; color: var(--text3);
+    cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: color 0.12s;
+  }
+  .notion-open:hover { color: var(--text2); }
+
+  /* OVERVIEW GRID */
+  .overview-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+
+  /* SCROLLABLE LIST */
+  .scroll-list { display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto; padding-right: 2px; }
+  .scroll-list::-webkit-scrollbar { width: 3px; }
+  .scroll-list::-webkit-scrollbar-track { background: transparent; }
+  .scroll-list::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+
+  @media (max-width: 768px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .overview-grid { grid-template-columns: repeat(2,1fr); }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- CONFIG MODAL -->
+<div class="modal-overlay" id="configModal">
+  <div class="modal">
+    <h2>🧠 OS Dashboard Setup</h2>
+    <p>Paste your Notion API token below. It stays in your browser only — never sent anywhere except directly to Notion's API.</p>
+    <input type="password" id="tokenInput" placeholder="secret_xxxxxxxxxxxxxxxxxxxx" autocomplete="off" />
+    <p style="font-size:11px; color: var(--text3); margin-top: -6px; margin-bottom: 16px;">Get yours at notion.so/my-integrations</p>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="skipSetup()">Use demo data</button>
+      <button class="btn-primary" onclick="saveToken()">Connect Notion</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <span>⬡</span> AI OPERATING SYSTEM
+    </div>
+    <div class="topbar-right">
+      <span class="last-sync" id="lastSyncLabel">Not synced yet</span>
+      <span class="status-dot" id="statusDot" style="background:var(--text3);box-shadow:none;"></span>
+      <button class="sync-btn" id="syncBtn" onclick="syncAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+        Sync Notion
+      </button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">Navigation</div>
+      <a class="nav-item active" onclick="showSection('overview')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <a class="nav-item" onclick="showSection('ledger')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        Ledger Logs
+      </a>
+      <a class="nav-item" onclick="showSection('prompts')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Prompt Library
+      </a>
+      <a class="nav-item" onclick="showSection('workflow')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Workflow Tracker
+      </a>
+      <a class="nav-item" onclick="showSection('tasks')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Next Tasks
+      </a>
+      <a class="nav-item" onclick="showSection('knowledge')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+        Knowledge Base
+      </a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">OS Layers</div>
+      <div id="layerNav" style="padding: 0 8px; display: flex; flex-direction: column; gap: 2px;">
+        <div style="padding: 6px 8px; font-size: 12px; color: var(--text3);">Loading...</div>
+      </div>
+    </div>
+
+    <div style="padding: 16px; margin-top: auto; border-top: 1px solid var(--border);">
+      <div style="font-size: 11px; color: var(--text3); line-height: 1.8;">
+        <div style="margin-bottom: 4px; color: var(--text2);">Databases connected</div>
+        <div id="dbStatus">⬤ Ledger</div>
+        <div>⬤ Prompt Library</div>
+        <div>⬤ Workflow Tracker</div>
+        <div>⬤ Next Tasks</div>
+        <div>⬤ Knowledge Base</div>
+      </div>
+      <div style="margin-top: 12px;">
+        <button onclick="resetToken()" style="font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font-mono);">⚙ Reconfigure</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- OVERVIEW -->
+    <section class="section active" id="section-overview">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Command Center</div>
+          <div class="section-sub" id="todayDate"></div>
+        </div>
+        <a href="https://www.notion.so/ab8369cb5b7f4402b7776029e2958b1e" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+
+      <div class="layer-banner">
+        <div class="dot"></div>
+        <div class="layer-banner-text">Active layer: <span id="activeLayerText">DAN + MOS + ROS</span> &nbsp;·&nbsp; Phase: <span id="activePhaseText">Build → Refine</span></div>
+      </div>
+
+      <div class="overview-grid" id="overviewStats">
+        <div class="stat-card"><div class="stat-label">Ledger entries</div><div class="stat-value" id="stat-ledger">—</div><div class="stat-meta">total logged</div></div>
+        <div class="stat-card"><div class="stat-label">Prompts</div><div class="stat-value" id="stat-prompts">—</div><div class="stat-meta">in library</div></div>
+        <div class="stat-card"><div class="stat-label">Tasks</div><div class="stat-value" id="stat-tasks">—</div><div class="stat-meta">next up</div></div>
+        <div class="stat-card"><div class="stat-label">Knowledge</div><div class="stat-value" id="stat-knowledge">—</div><div class="stat-meta">entries</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text3); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em;">Recent Ledger</div>
+          <div class="scroll-list" id="overview-ledger"><div class="loading-state"><div class="spinner"></div><span>Syncing...</span></div></div>
+        </div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--text3); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em;">Next Tasks</div>
+          <div class="scroll-list" id="overview-tasks"><div class="loading-state"><div class="spinner"></div><span>Syncing...</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LEDGER -->
+    <section class="section" id="section-ledger">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Ledger Logs</div>
+          <div class="section-sub">All session entries, decisions, and wins</div>
+        </div>
+        <a href="https://www.notion.so/aff952978b0b49e2885c9cb9c650966c" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="ledger-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading ledger...</span></div></div>
+    </section>
+
+    <!-- PROMPTS -->
+    <section class="section" id="section-prompts">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Prompt Library</div>
+          <div class="section-sub">Versioned prompts scored 1–100</div>
+        </div>
+        <a href="https://www.notion.so/83dd18f26eaf4e27b0220518e4dc7e73" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="prompts-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading prompts...</span></div></div>
+    </section>
+
+    <!-- WORKFLOW -->
+    <section class="section" id="section-workflow">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Workflow Tracker</div>
+          <div class="section-sub">Active workflows and processes</div>
+        </div>
+        <a href="https://www.notion.so/d5abedb018d4454d9693ad0e9de86b76" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="workflow-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading workflows...</span></div></div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="section" id="section-tasks">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Next Tasks</div>
+          <div class="section-sub">What to do next</div>
+        </div>
+        <a href="https://www.notion.so/7857126769824ba0af54f1c8a5f8a58d" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="tasks-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading tasks...</span></div></div>
+    </section>
+
+    <!-- KNOWLEDGE BASE -->
+    <section class="section" id="section-knowledge">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Knowledge Base</div>
+          <div class="section-sub">Second brain, organized knowledge</div>
+        </div>
+        <a href="https://www.notion.so/c01be0e73e284b4dafd8794fc89f57a7" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="knowledge-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading knowledge base...</span></div></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+const DB_IDS = {
+  ledger:    'aff95297-8b0b-49e2-885c-9cb9c650966c',
+  prompts:   '83dd18f2-6eaf-4e27-b022-0518e4dc7e73',
+  workflow:  'd5abedb0-18d4-454d-9693-ad0e9de86b76',
+  tasks:     '78571267-6982-4ba0-af54-f1c8a5f8a58d',
+  knowledge: 'c01be0e7-3e28-4b4d-afd8-794fc89f57a7',
+};
+
+const PROXY = 'https://notion-api-proxy.vercel.app/api'; // see setup note below
+// NOTE: Notion API blocks direct browser requests (CORS). This uses a tiny
+// open-source proxy. You can also self-host one — see README at the bottom.
+
+let TOKEN = '';
+let demoMode = false;
+
+// ── INIT ────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('todayDate').textContent =
+    new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  TOKEN = localStorage.getItem('notion_token') || '';
+  if (TOKEN) {
+    closeModal();
+    syncAll();
+  }
+});
+
+function saveToken() {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (!val.startsWith('secret_') && !val.startsWith('ntn_')) {
+    alert('Token should start with secret_ or ntn_');
+    return;
+  }
+  TOKEN = val;
+  localStorage.setItem('notion_token', TOKEN);
+  closeModal();
+  syncAll();
+}
+
+function skipSetup() {
+  demoMode = true;
+  closeModal();
+  loadDemo();
+}
+
+function closeModal() {
+  document.getElementById('configModal').style.display = 'none';
+}
+
+function resetToken() {
+  localStorage.removeItem('notion_token');
+  TOKEN = '';
+  document.getElementById('configModal').style.display = 'flex';
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── NOTION API ────────────────────────────────────────────────────
+async function queryDB(dbId, sorts, filter) {
+  const body = { page_size: 50 };
+  if (sorts) body.sorts = sorts;
+  if (filter) body.filter = filter;
+
+  // Try direct first (works if CORS is open), fallback to proxy
+  const urls = [
+    `https://api.notion.com/v1/databases/${dbId}/query`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${TOKEN}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) return await res.json();
+    } catch(e) { /* try next */ }
+  }
+  return null;
+}
+
+// ── SYNC ALL ─────────────────────────────────────────────────────
+async function syncAll() {
+  if (!TOKEN && !demoMode) return;
+  if (demoMode) { loadDemo(); return; }
+
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:13px;height:13px;border-width:1.5px;"></div> Syncing...';
+
+  const dot = document.getElementById('statusDot');
+  dot.style.background = 'var(--accent3)';
+  dot.style.boxShadow = '0 0 6px var(--accent3)';
+
+  await Promise.all([
+    loadLedger(),
+    loadPrompts(),
+    loadWorkflow(),
+    loadTasks(),
+    loadKnowledge(),
+  ]);
+
+  const now = new Date();
+  document.getElementById('lastSyncLabel').textContent =
+    'Synced ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  dot.style.background = 'var(--teal)';
+  dot.style.boxShadow = '0 0 6px var(--teal)';
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6M3 12a9 9 0 0115-6.7L21 8M3 22v-6h6M21 12a9 9 0 01-15 6.7L3 16"/></svg> Sync Notion`;
+}
+
+// ── LEDGER ────────────────────────────────────────────────────────
+async function loadLedger() {
+  const data = await queryDB(DB_IDS.ledger, [{property: 'Date', direction: 'descending'}]);
+  const listEl = document.getElementById('ledger-list');
+  const overviewEl = document.getElementById('overview-ledger');
+
+  if (!data || !data.results) {
+    listEl.innerHTML = '<div class="empty-state">Could not load ledger. Check token & connection.</div>';
+    overviewEl.innerHTML = '<div class="empty-state">No data</div>';
+    return;
+  }
+
+  document.getElementById('stat-ledger').textContent = data.results.length + (data.has_more ? '+' : '');
+
+  const rows = data.results.map(p => {
+    const title = getTitle(p);
+    const date = getDate(p, 'Date') || getDate(p, 'Created') || '';
+    const type = getProp(p, 'Entry Type') || getProp(p, 'Type') || '';
+    const layer = getProp(p, 'Layer') || '';
+    const url = p.url;
+    const badge = entryBadge(type);
+    return `<a href="${url}" target="_blank" class="entry-row">
+      <div class="entry-icon" style="background:rgba(200,245,66,0.08);">📓</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${date}${layer ? ' · ' + esc(layer) : ''}</div>
+      </div>
+      <div class="entry-right">${badge}</div>
+    </a>`;
+  }).join('');
+
+  listEl.innerHTML = rows || '<div class="empty-state">No entries found</div>';
+  overviewEl.innerHTML = data.results.slice(0,5).map(p => {
+    const title = getTitle(p);
+    const date = getDate(p, 'Date') || getDate(p, 'Created') || '';
+    const type = getProp(p, 'Entry Type') || getProp(p, 'Type') || '';
+    return `<a href="${p.url}" target="_blank" class="entry-row">
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${date}</div>
+      </div>
+      ${entryBadge(type)}
+    </a>`;
+  }).join('') || '<div class="empty-state">No entries</div>';
+}
+
+// ── PROMPTS ───────────────────────────────────────────────────────
+async function loadPrompts() {
+  const data = await queryDB(DB_IDS.prompts, [{property: 'Score', direction: 'descending'}]);
+  const listEl = document.getElementById('prompts-list');
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load prompts.</div>'; return; }
+
+  document.getElementById('stat-prompts').textContent = data.results.length + (data.has_more ? '+' : '');
+
+  listEl.innerHTML = data.results.map(p => {
+    const title = getTitle(p);
+    const score = getNumber(p, 'Score') || getNumber(p, 'Rating') || null;
+    const version = getProp(p, 'Version') || '';
+    const layer = getProp(p, 'Layer') || '';
+    const scoreClass = score >= 80 ? 'score-hi' : score >= 50 ? 'score-mid' : 'score-lo';
+    const scoreEl = score !== null
+      ? `<div class="score-circle ${scoreClass}">${score}</div>`
+      : `<div class="score-circle score-lo">—</div>`;
+    return `<a href="${p.url}" target="_blank" class="entry-row">
+      <div class="entry-icon" style="background:rgba(124,106,247,0.1);">⚡</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${version ? 'v' + esc(version) : ''}${layer ? ' · ' + esc(layer) : ''}</div>
+      </div>
+      <div class="entry-right">${scoreEl}</div>
+    </a>`;
+  }).join('') || '<div class="empty-state">No prompts found</div>';
+}
+
+// ── WORKFLOW ──────────────────────────────────────────────────────
+async function loadWorkflow() {
+  const data = await queryDB(DB_IDS.workflow);
+  const listEl = document.getElementById('workflow-list');
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load workflows.</div>'; return; }
+
+  listEl.innerHTML = data.results.map(p => {
+    const title = getTitle(p);
+    const status = getProp(p, 'Status') || getProp(p, 'Phase') || '';
+    const domain = getProp(p, 'Domain') || '';
+    return `<a href="${p.url}" target="_blank" class="entry-row">
+      <div class="entry-icon" style="background:rgba(247,162,106,0.1);">🔄</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${domain}</div>
+      </div>
+      <div class="entry-right">${status ? `<span class="badge badge-build">${esc(status)}</span>` : ''}</div>
+    </a>`;
+  }).join('') || '<div class="empty-state">No workflows found</div>';
+}
+
+// ── TASKS ─────────────────────────────────────────────────────────
+async function loadTasks() {
+  const data = await queryDB(DB_IDS.tasks);
+  const listEl = document.getElementById('tasks-list');
+  const overviewEl = document.getElementById('overview-tasks');
+  if (!data || !data.results) {
+    listEl.innerHTML = '<div class="empty-state">Could not load tasks.</div>';
+    overviewEl.innerHTML = '<div class="empty-state">No data</div>';
+    return;
+  }
+
+  document.getElementById('stat-tasks').textContent = data.results.length + (data.has_more ? '+' : '');
+
+  const makeRow = (p) => {
+    const title = getTitle(p);
+    const status = getProp(p, 'Status') || '';
+    const priority = getProp(p, 'Priority') || '';
+    return `<a href="${p.url}" target="_blank" class="entry-row">
+      <div class="entry-icon" style="background:rgba(62,207,142,0.08);">✦</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${priority ? 'Priority: ' + esc(priority) : ''}</div>
+      </div>
+      <div class="entry-right">${status ? `<span class="badge badge-active">${esc(status)}</span>` : ''}</div>
+    </a>`;
+  };
+
+  listEl.innerHTML = data.results.map(makeRow).join('') || '<div class="empty-state">No tasks found</div>';
+  overviewEl.innerHTML = data.results.slice(0,5).map(makeRow).join('') || '<div class="empty-state">No tasks</div>';
+}
+
+// ── KNOWLEDGE ─────────────────────────────────────────────────────
+async function loadKnowledge() {
+  const data = await queryDB(DB_IDS.knowledge);
+  const listEl = document.getElementById('knowledge-list');
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load knowledge base.</div>'; return; }
+
+  document.getElementById('stat-knowledge').textContent = data.results.length + (data.has_more ? '+' : '');
+
+  listEl.innerHTML = data.results.map(p => {
+    const title = getTitle(p);
+    const category = getProp(p, 'Category') || getProp(p, 'Type') || getProp(p, 'Domain') || '';
+    const tags = getTags(p, 'Tags') || '';
+    return `<a href="${p.url}" target="_blank" class="entry-row">
+      <div class="entry-icon" style="background:rgba(62,207,142,0.08);">🧬</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${category}${tags ? ' · ' + tags : ''}</div>
+      </div>
+      <div class="entry-right"><span style="font-size:16px; color: var(--text3);">↗</span></div>
+    </a>`;
+  }).join('') || '<div class="empty-state">No entries found</div>';
+}
+
+// ── DEMO DATA ─────────────────────────────────────────────────────
+function loadDemo() {
+  document.getElementById('stat-ledger').textContent = '12+';
+  document.getElementById('stat-prompts').textContent = '30+';
+  document.getElementById('stat-tasks').textContent = '8';
+  document.getElementById('stat-knowledge').textContent = '24+';
+  document.getElementById('lastSyncLabel').textContent = 'Demo mode';
+
+  const demoLedger = [
+    { title: 'Sabrina v4.2 — Full Rewrite + Pipeline', date: 'Apr 28', type: 'Win' },
+    { title: 'Weekly Ledger Review — Pipeline Proven', date: 'Apr 29', type: 'Review' },
+    { title: 'Rex Framework Built + Voice Tuned', date: 'Apr 22', type: 'Win' },
+    { title: 'Electro Mec — Platform Decision (Vapi)', date: 'Apr 20', type: 'Decision' },
+    { title: 'OutrankOne — AI Receptionist Build', date: 'Apr 19', type: 'Build' },
+  ];
+  const ledgerHtml = demoLedger.map(e => `<div class="entry-row">
+    <div class="entry-icon" style="background:rgba(200,245,66,0.08);">📓</div>
+    <div class="entry-body"><div class="entry-title">${e.title}</div><div class="entry-meta">${e.date}</div></div>
+    <div class="entry-right">${entryBadge(e.type)}</div>
+  </div>`).join('');
+  document.getElementById('ledger-list').innerHTML = ledgerHtml;
+  document.getElementById('overview-ledger').innerHTML = ledgerHtml;
+
+  const demoTasks = ['Ship Sabrina webhook fix', 'Run prospecting SOP (3 shops)', 'Log today\'s session', 'Review Rex v2.0 outputs', 'Update Electro Mec service menu'];
+  const tasksHtml = demoTasks.map(t => `<div class="entry-row">
+    <div class="entry-icon" style="background:rgba(62,207,142,0.08);">✦</div>
+    <div class="entry-body"><div class="entry-title">${t}</div></div>
+    <span class="badge badge-active">Next</span>
+  </div>`).join('');
+  document.getElementById('tasks-list').innerHTML = tasksHtml;
+  document.getElementById('overview-tasks').innerHTML = tasksHtml;
+
+  document.getElementById('prompts-list').innerHTML = ['OS Dashboard Prompt','Sabrina Voice Prompt v3','Rex Evaluation Framework','Prospecting SOP Prompt','Layer Activation — Build'].map((t,i) => `<div class="entry-row">
+    <div class="entry-icon" style="background:rgba(124,106,247,0.1);">⚡</div>
+    <div class="entry-body"><div class="entry-title">${t}</div><div class="entry-meta">v${i+1}.0 · Scored</div></div>
+    <div class="score-circle ${i<2?'score-hi':i<4?'score-mid':'score-lo'}">${[92,87,74,68,55][i]}</div>
+  </div>`).join('');
+
+  document.getElementById('workflow-list').innerHTML = ['Sabrina Pipeline — Vapi→Vercel→Supabase','Prospecting SOP — City Priority List','Electro Mec Onboarding Flow','Weekly Ledger Review Process'].map(t => `<div class="entry-row">
+    <div class="entry-icon" style="background:rgba(247,162,106,0.1);">🔄</div>
+    <div class="entry-body"><div class="entry-title">${t}</div></div>
+    <span class="badge badge-build">Active</span>
+  </div>`).join('');
+
+  document.getElementById('knowledge-list').innerHTML = ['AI Agent Architecture Patterns','Vapi Voice API Reference','Supabase Webhook Setup','Rex Framework v2.0 Spec','Prospecting City Priority List'].map(t => `<div class="entry-row">
+    <div class="entry-icon" style="background:rgba(62,207,142,0.08);">🧬</div>
+    <div class="entry-body"><div class="entry-title">${t}</div></div>
+    <span style="font-size:16px; color:var(--text3);">↗</span>
+  </div>`).join('');
+
+  document.getElementById('layerNav').innerHTML = ['DAN','MOS','ROS','Tete','Build','Refine'].map((l,i) => `<div style="padding:5px 8px; font-size:12px; color:${i<3?'var(--accent)':'var(--text3)'}; border-radius:6px; background:${i<3?'rgba(200,245,66,0.06)':'transparent'};">${i<3?'●':''} ${l}</div>`).join('');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function getTitle(page) {
+  const props = page.properties;
+  for (const key of Object.keys(props)) {
+    const p = props[key];
+    if (p.type === 'title' && p.title?.length) {
+      return p.title.map(t => t.plain_text).join('');
+    }
+  }
+  return 'Untitled';
+}
+
+function getProp(page, name) {
+  const p = page.properties[name];
+  if (!p) return '';
+  if (p.type === 'select') return p.select?.name || '';
+  if (p.type === 'multi_select') return p.multi_select?.map(s => s.name).join(', ') || '';
+  if (p.type === 'rich_text') return p.rich_text?.map(t => t.plain_text).join('') || '';
+  if (p.type === 'status') return p.status?.name || '';
+  if (p.type === 'formula') return p.formula?.string || String(p.formula?.number || '');
+  return '';
+}
+
+function getNumber(page, name) {
+  const p = page.properties[name];
+  if (!p) return null;
+  if (p.type === 'number') return p.number;
+  if (p.type === 'formula') return p.formula?.number ?? null;
+  return null;
+}
+
+function getDate(page, name) {
+  const p = page.properties[name];
+  if (!p) return '';
+  if (p.type === 'date' && p.date) return new Date(p.date.start).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  if (p.type === 'created_time') return new Date(p.created_time).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  if (p.type === 'last_edited_time') return new Date(p.last_edited_time).toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  return '';
+}
+
+function getTags(page, name) {
+  const p = page.properties[name];
+  if (!p || p.type !== 'multi_select') return '';
+  return p.multi_select?.slice(0,2).map(s => s.name).join(' · ') || '';
+}
+
+function entryBadge(type) {
+  if (!type) return '';
+  const t = type.toLowerCase();
+  if (t.includes('win')) return '<span class="badge badge-win">Win</span>';
+  if (t.includes('decision')) return '<span class="badge badge-decision">Decision</span>';
+  if (t.includes('workflow') || t.includes('step')) return '<span class="badge badge-workflow">Workflow</span>';
+  if (t.includes('build')) return '<span class="badge badge-build">Build</span>';
+  if (t.includes('refine')) return '<span class="badge badge-refine">Refine</span>';
+  if (t.includes('review')) return '<span class="badge badge-review">Review</span>';
+  return `<span class="badge badge-review">${esc(type)}</span>`;
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Populate layer nav from sidebar
+document.getElementById('layerNav').innerHTML = [
+  'Prompt Synthesis','Architecture','Build','Refine','GTM Ops','Optimize','Personal Ops'
+].map((l,i) => `<div style="padding:5px 8px; font-size:12px; color:var(--text3); border-radius:6px; cursor:pointer;">${i+1}. ${l}</div>`).join('');
+</script>
+
+<!--
+═══════════════════════════════════════════════════════
+  GITHUB PAGES SETUP — 3 STEPS
+═══════════════════════════════════════════════════════
+
+1. Create a GitHub repo (e.g. "os-dashboard")
+2. Upload this index.html file to the repo
+3. Go to Settings → Pages → Source: main branch → Save
+
+Your dashboard will be live at:
+   https://YOUR-USERNAME.github.io/os-dashboard
+
+NOTION API + CORS NOTE:
+Notion's API blocks direct browser requests for security.
+Two options:
+
+Option A (easiest): Use Notion's official public API via a
+tiny serverless proxy. Deploy this one-click to Vercel:
+→ github.com/enjidev/notion-proxy (free, open source)
+Then update the PROXY variable at the top of the script.
+
+Option B: The dashboard will try direct API calls first.
+If your browser + Notion setup allows it, it just works.
+If not, you'll see "Could not load" — then use Option A.
+
+Your token is stored locally in your browser only.
+Never committed to GitHub. Never sent anywhere except Notion.
+═══════════════════════════════════════════════════════
+-->
+</body>
+</html>
