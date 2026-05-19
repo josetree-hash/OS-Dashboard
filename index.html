@@ -705,6 +705,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
         Knowledge Base
       </a>
+      <a class="nav-item" onclick="showSection('prompt-ledger')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+        Prompt Ledger
+      </a>
     </div>
 
     <div class="nav-section">
@@ -722,6 +726,7 @@
         <div>⬤ Workflow Tracker</div>
         <div>⬤ Next Tasks</div>
         <div>⬤ Knowledge Base</div>
+        <div>⬤ Prompt Ledger</div>
       </div>
       <div style="margin-top: 12px;">
         <button onclick="resetToken()" style="font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font-mono);">⚙ Reconfigure</button>
@@ -826,6 +831,18 @@
       <div class="scroll-list" id="knowledge-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading knowledge base...</span></div></div>
     </section>
 
+    <!-- PROMPT LEDGER -->
+    <section class="section" id="section-prompt-ledger">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Prompt Ledger</div>
+          <div class="section-sub">Master prompt archive — every prompt built</div>
+        </div>
+        <a href="https://www.notion.so/48c5e1820e364977bd095fb4f6765d58" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="prompt-ledger-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading Prompt Ledger...</span></div></div>
+    </section>
+
   </main>
 </div>
 
@@ -837,6 +854,7 @@ const DB_IDS = {
   workflow:  'd5abedb0-18d4-454d-9693-ad0e9de86b76',
   tasks:     '78571267-6982-4ba0-af54-f1c8a5f8a58d',
   knowledge: 'c01be0e7-3e28-4b4d-afd8-794fc89f57a7',
+  prompt_ledger: '48c5e182-0e36-4977-bd09-5fb4f6765d58',
   layers:    '3d09e2b5-0b24-4bf9-806c-34a45a0ee0a5',
   systems:   '04f6301c-54e2-42e7-9527-28151a1bf259',
   os_state:  null, // created in Phase 2 — Layer Switcher
@@ -947,8 +965,8 @@ function openEntryPopup(pageId, type = 'ledger') {
 
   // Header
   const labelMap = {
-    ledger: 'Ledger Entry', prompt: 'Prompt', workflow: 'Workflow',
-    task: 'Task', knowledge: 'Knowledge', system: 'System', layer: 'Layer',
+    ledger: 'Ledger Entry', prompt: 'Prompt', prompt_ledger: 'Prompt Ledger',
+    workflow: 'Workflow', task: 'Task', knowledge: 'Knowledge', system: 'System', layer: 'Layer',
   };
   document.getElementById('popupEyebrow').textContent = labelMap[type] || 'Entry';
   document.getElementById('popupTitle').textContent = getTitle(page);
@@ -1025,23 +1043,34 @@ function cachePage(page) { if (page && page.id) LOADED_PAGES[page.id] = page; }
 
 // ── POPUP RENDERERS ───────────────────────────────────────────────
 function renderPopupTags(page) {
-  const date = getDate(page, 'Date') || getDate(page, 'Created') || '';
-  const domain = getProp(page, 'Domain') || '';
+  const date = getDate(page, 'Date') || getDate(page, 'Date Created') || getDate(page, 'Created') || '';
   const layer = getProp(page, 'Layer') || '';
+  const domain = getProp(page, 'Domain') || '';
+  const category = getProp(page, 'Category') || '';
   const phase = getProp(page, 'Phase') || '';
+  const status = getProp(page, 'Status') || '';
+  const complexity = getProp(page, 'Complexity Level') || getProp(page, 'Complexity') || '';
+  const skill = getProp(page, 'Skill Level') || '';
   const type = getProp(page, 'Entry Type') || getProp(page, 'Type') || '';
   const tags = [];
   if (date) tags.push(`<span class="popup-tag tag-date">${esc(date)}</span>`);
   if (layer) tags.push(`<span class="popup-tag tag-layer">${esc(layer)}</span>`);
   if (domain) tags.push(`<span class="popup-tag tag-domain">${esc(domain)}</span>`);
+  if (category) tags.push(`<span class="popup-tag tag-domain">${esc(category)}</span>`);
   if (phase) tags.push(`<span class="popup-tag tag-phase">${esc(phase)}</span>`);
+  if (status) tags.push(`<span class="popup-tag tag-phase">${esc(status)}</span>`);
+  if (complexity) tags.push(`<span class="popup-tag">${esc(complexity)}</span>`);
+  if (skill) tags.push(`<span class="popup-tag">${esc(skill)}</span>`);
   if (type) tags.push(`<span class="popup-tag">${esc(type)}</span>`);
   return tags.join('');
 }
 
 // Renders all non-empty properties as a metadata grid (skipping ones already in the header tags)
 function renderPopupProps(page) {
-  const HEADER_KEYS = new Set(['Date','Domain','Layer','Phase','Entry Type','Type','Created']);
+  const HEADER_KEYS = new Set([
+    'Date','Date Created','Created','Domain','Layer','Phase','Category',
+    'Entry Type','Type','Status','Complexity','Complexity Level','Skill Level'
+  ]);
   const rows = [];
   for (const key of Object.keys(page.properties || {})) {
     if (HEADER_KEYS.has(key)) continue;
@@ -1236,6 +1265,7 @@ async function syncAll() {
     loadWorkflow(),
     loadTasks(),
     loadKnowledge(),
+    loadPromptLedger(),
   ]);
 
   const now = new Date();
@@ -1305,23 +1335,25 @@ async function loadPrompts() {
 
   document.getElementById('stat-prompts').textContent = data.results.length + (data.has_more ? '+' : '');
 
+  data.results.forEach(cachePage);
+
   listEl.innerHTML = data.results.map(p => {
     const title = getTitle(p);
-    const score = getNumber(p, 'Score') || getNumber(p, 'Rating') || null;
+    const score = getNumber(p, 'Score') || getNumber(p, 'Rating') || getNumber(p, 'Performance Score') || null;
     const version = getProp(p, 'Version') || '';
     const layer = getProp(p, 'Layer') || '';
     const scoreClass = score >= 80 ? 'score-hi' : score >= 50 ? 'score-mid' : 'score-lo';
     const scoreEl = score !== null
       ? `<div class="score-circle ${scoreClass}">${score}</div>`
       : `<div class="score-circle score-lo">—</div>`;
-    return `<a href="${p.url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','prompt')">
       <div class="entry-icon" style="background:rgba(124,106,247,0.1);">⚡</div>
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${version ? 'v' + esc(version) : ''}${layer ? ' · ' + esc(layer) : ''}</div>
       </div>
       <div class="entry-right">${scoreEl}</div>
-    </a>`;
+    </div>`;
   }).join('') || '<div class="empty-state">No prompts found</div>';
 }
 
@@ -1331,18 +1363,20 @@ async function loadWorkflow() {
   const listEl = document.getElementById('workflow-list');
   if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load workflows.</div>'; return; }
 
+  data.results.forEach(cachePage);
+
   listEl.innerHTML = data.results.map(p => {
     const title = getTitle(p);
     const status = getProp(p, 'Status') || getProp(p, 'Phase') || '';
     const domain = getProp(p, 'Domain') || '';
-    return `<a href="${p.url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','workflow')">
       <div class="entry-icon" style="background:rgba(247,162,106,0.1);">🔄</div>
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${domain}</div>
       </div>
       <div class="entry-right">${status ? `<span class="badge badge-build">${esc(status)}</span>` : ''}</div>
-    </a>`;
+    </div>`;
   }).join('') || '<div class="empty-state">No workflows found</div>';
 }
 
@@ -1359,18 +1393,20 @@ async function loadTasks() {
 
   document.getElementById('stat-tasks').textContent = data.results.length + (data.has_more ? '+' : '');
 
+  data.results.forEach(cachePage);
+
   const makeRow = (p) => {
     const title = getTitle(p);
     const status = getProp(p, 'Status') || '';
     const priority = getProp(p, 'Priority') || '';
-    return `<a href="${p.url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','task')">
       <div class="entry-icon" style="background:rgba(62,207,142,0.08);">✦</div>
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${priority ? 'Priority: ' + esc(priority) : ''}</div>
       </div>
       <div class="entry-right">${status ? `<span class="badge badge-active">${esc(status)}</span>` : ''}</div>
-    </a>`;
+    </div>`;
   };
 
   listEl.innerHTML = data.results.map(makeRow).join('') || '<div class="empty-state">No tasks found</div>';
@@ -1385,18 +1421,60 @@ async function loadKnowledge() {
 
   document.getElementById('stat-knowledge').textContent = data.results.length + (data.has_more ? '+' : '');
 
+  data.results.forEach(cachePage);
+
   listEl.innerHTML = data.results.map(p => {
     const title = getTitle(p);
     const category = getProp(p, 'Category') || getProp(p, 'Type') || getProp(p, 'Domain') || '';
     const tags = getTags(p, 'Tags') || '';
-    return `<a href="${p.url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','knowledge')">
       <div class="entry-icon" style="background:rgba(62,207,142,0.08);">🧬</div>
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${category}${tags ? ' · ' + tags : ''}</div>
       </div>
       <div class="entry-right"><span style="font-size:16px; color: var(--text3);">↗</span></div>
-    </a>`;
+    </div>`;
+  }).join('') || '<div class="empty-state">No entries found</div>';
+}
+
+// ── PROMPT LEDGER ─────────────────────────────────────────────────
+// Master prompt archive — separate database from Prompt Library.
+async function loadPromptLedger() {
+  const data = await queryDB(DB_IDS.prompt_ledger);
+  const listEl = document.getElementById('prompt-ledger-list');
+  if (!listEl) return; // section may not be present in older HTML
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load Prompt Ledger.</div>'; return; }
+
+  const statEl = document.getElementById('stat-prompt-ledger');
+  if (statEl) statEl.textContent = data.results.length + (data.has_more ? '+' : '');
+
+  data.results.forEach(cachePage);
+
+  listEl.innerHTML = data.results.map(p => {
+    const title = getTitle(p);
+    const score = getNumber(p, 'Score') || getNumber(p, 'Rating') || getNumber(p, 'Performance Score') || null;
+    const version = getProp(p, 'Version') || '';
+    const layer = getProp(p, 'Layer') || '';
+    const category = getProp(p, 'Category') || '';
+    const date = getDate(p, 'Date') || getDate(p, 'Date Created') || getDate(p, 'Created') || '';
+    const scoreClass = score >= 80 ? 'score-hi' : score >= 50 ? 'score-mid' : 'score-lo';
+    const right = score !== null
+      ? `<div class="score-circle ${scoreClass}">${score}</div>`
+      : `<span style="font-size:16px; color: var(--text3);">↗</span>`;
+    const metaParts = [];
+    if (version) metaParts.push('v' + esc(version));
+    if (layer) metaParts.push(esc(layer));
+    if (category && !layer) metaParts.push(esc(category));
+    if (date) metaParts.push(date);
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','prompt_ledger')">
+      <div class="entry-icon" style="background:rgba(124,106,247,0.1);">📜</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${metaParts.join(' · ')}</div>
+      </div>
+      <div class="entry-right">${right}</div>
+    </div>`;
   }).join('') || '<div class="empty-state">No entries found</div>';
 }
 
