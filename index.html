@@ -16,8 +16,8 @@
     --border: rgba(255,255,255,0.07);
     --border-hi: rgba(255,255,255,0.15);
     --text: #f0f0ee;
-    --text2: #888884;
-    --text3: #4a4a47;
+    --text2: #b8b8b4;
+    --text3: #888884;
     --accent: #c8f542;
     --accent2: #7c6af7;
     --accent3: #f7a26a;
@@ -1453,15 +1453,10 @@ async function loadPromptLedger() {
 
   listEl.innerHTML = data.results.map(p => {
     const title = getTitle(p);
-    const score = getNumber(p, 'Score') || getNumber(p, 'Rating') || getNumber(p, 'Performance Score') || null;
     const version = getProp(p, 'Version') || '';
     const layer = getProp(p, 'Layer') || '';
     const category = getProp(p, 'Category') || '';
     const date = getDate(p, 'Date') || getDate(p, 'Date Created') || getDate(p, 'Created') || '';
-    const scoreClass = score >= 80 ? 'score-hi' : score >= 50 ? 'score-mid' : 'score-lo';
-    const right = score !== null
-      ? `<div class="score-circle ${scoreClass}">${score}</div>`
-      : `<span style="font-size:16px; color: var(--text3);">↗</span>`;
     const metaParts = [];
     if (version) metaParts.push('v' + esc(version));
     if (layer) metaParts.push(esc(layer));
@@ -1473,7 +1468,7 @@ async function loadPromptLedger() {
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${metaParts.join(' · ')}</div>
       </div>
-      <div class="entry-right">${right}</div>
+      <div class="entry-right"><span style="font-size:16px; color: var(--text3);">↗</span></div>
     </div>`;
   }).join('') || '<div class="empty-state">No entries found</div>';
 }
