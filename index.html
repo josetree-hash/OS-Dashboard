@@ -311,6 +311,255 @@
     font-size: 13px; cursor: pointer;
   }
 
+  /* ENTRY POPUP — detail view, copy-paste friendly */
+  .popup-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 999;
+    padding: 24px;
+    backdrop-filter: blur(2px);
+  }
+  .popup-overlay.active { display: flex; }
+  .popup {
+    background: var(--bg2);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius-lg);
+    width: 760px;
+    max-width: 100%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    animation: popupIn 0.18s ease-out;
+  }
+  @keyframes popupIn {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .popup-header {
+    padding: 22px 26px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .popup-header-left { flex: 1; min-width: 0; }
+  .popup-eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    margin-bottom: 6px;
+  }
+  .popup-title {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .popup-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .popup-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text2);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+  .popup-tag.tag-layer { background: rgba(200,245,66,0.1); color: var(--accent); }
+  .popup-tag.tag-domain { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .popup-tag.tag-phase { background: rgba(247,162,106,0.15); color: var(--accent3); }
+  .popup-tag.tag-date { background: transparent; color: var(--text3); padding-left: 0; }
+  .popup-close {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 16px;
+    cursor: pointer;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.12s;
+    font-family: var(--font-mono);
+  }
+  .popup-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+  .popup-body {
+    padding: 22px 26px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .popup-body::-webkit-scrollbar { width: 4px; }
+  .popup-body::-webkit-scrollbar-track { background: transparent; }
+  .popup-body::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+  .popup-section { margin-bottom: 22px; }
+  .popup-section:last-child { margin-bottom: 0; }
+  .popup-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .popup-section-content {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.7;
+    font-family: var(--font-mono);
+  }
+  .popup-prop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 22px;
+  }
+  .popup-prop {
+    font-size: 12px;
+  }
+  .popup-prop-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    margin-bottom: 2px;
+  }
+  .popup-prop-value {
+    color: var(--text);
+    font-family: var(--font-mono);
+  }
+  /* Notion block rendering inside popup */
+  .popup-blocks p,
+  .popup-blocks li,
+  .popup-blocks .nb-quote { font-size: 13px; color: var(--text); line-height: 1.7; margin-bottom: 10px; }
+  .popup-blocks h1 { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin: 18px 0 10px; color: var(--text); letter-spacing: -0.02em; }
+  .popup-blocks h2 { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin: 16px 0 8px; color: var(--text); letter-spacing: -0.01em; }
+  .popup-blocks h3 { font-family: var(--font-head); font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+  .popup-blocks ul, .popup-blocks ol { padding-left: 20px; margin-bottom: 10px; }
+  .popup-blocks li { margin-bottom: 4px; }
+  .popup-blocks .nb-quote {
+    border-left: 2px solid var(--accent);
+    padding-left: 12px;
+    color: var(--text2);
+    font-style: italic;
+  }
+  .popup-blocks .nb-code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--accent);
+    white-space: pre-wrap;
+    margin-bottom: 10px;
+    overflow-x: auto;
+  }
+  .popup-blocks .nb-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+  .popup-blocks .nb-todo {
+    display: flex; gap: 8px; align-items: flex-start;
+    margin-bottom: 6px;
+  }
+  .popup-blocks .nb-todo .box {
+    width: 14px; height: 14px;
+    border: 1.5px solid var(--border-hi);
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .popup-blocks .nb-todo.done .box {
+    background: var(--accent);
+    border-color: var(--accent);
+    position: relative;
+  }
+  .popup-blocks .nb-todo.done .box::after {
+    content: '✓'; color: #0a0a0b; font-size: 11px; font-weight: 700;
+    position: absolute; top: -2px; left: 2px;
+  }
+  .popup-blocks .nb-todo.done span { color: var(--text3); text-decoration: line-through; }
+  .popup-blocks a { color: var(--accent); text-decoration: underline; text-decoration-color: rgba(200,245,66,0.3); }
+  .popup-blocks code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; font-size: 11.5px; color: var(--accent); }
+  .popup-blocks strong { color: var(--text); font-weight: 600; }
+  .popup-blocks em { color: var(--text2); }
+  .popup-empty-body {
+    font-size: 12px; color: var(--text3); padding: 12px 0; text-align: center;
+  }
+  .popup-loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 50px; gap: 12px;
+    color: var(--text3); font-size: 12px;
+  }
+  .popup-footer {
+    padding: 14px 26px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .popup-footer-spacer { flex: 1; }
+  .popup-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border-hi);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.12s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .popup-btn:hover { background: rgba(255,255,255,0.06); }
+  .popup-btn svg { width: 12px; height: 12px; }
+  .popup-btn-primary { background: var(--accent); color: #0a0a0b; border-color: var(--accent); font-weight: 500; }
+  .popup-btn-primary:hover { background: var(--accent); opacity: 0.88; }
+  .popup-btn-link {
+    font-size: 11px; color: var(--text3);
+    background: transparent; border: none; padding: 6px 8px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+  }
+  .popup-btn-link:hover { color: var(--text2); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: var(--bg);
+    padding: 10px 18px;
+    border-radius: 99px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+    z-index: 1100;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
   /* ACTIVE LAYER BANNER */
   .layer-banner {
     display: flex; align-items: center; gap: 12px;
@@ -381,6 +630,35 @@
     </div>
   </div>
 </div>
+
+<!-- ENTRY POPUP — detail view (Ledger, Prompts, etc.) -->
+<div class="popup-overlay" id="entryPopup" onclick="if(event.target===this)closePopup()">
+  <div class="popup">
+    <div class="popup-header">
+      <div class="popup-header-left">
+        <div class="popup-eyebrow" id="popupEyebrow">Ledger Entry</div>
+        <div class="popup-title" id="popupTitle">Loading…</div>
+        <div class="popup-tags" id="popupTags"></div>
+      </div>
+      <button class="popup-close" onclick="closePopup()" title="Close (Esc)">✕</button>
+    </div>
+    <div class="popup-body" id="popupBody">
+      <div class="popup-loading"><div class="spinner"></div><span>Loading entry…</span></div>
+    </div>
+    <div class="popup-footer">
+      <button class="popup-btn popup-btn-primary" onclick="copyCurrentEntry()" id="popupCopyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy entry
+      </button>
+      <button class="popup-btn" onclick="copyCurrentBodyOnly()" id="popupCopyBodyBtn">Copy body only</button>
+      <div class="popup-footer-spacer"></div>
+      <a class="popup-btn-link" id="popupNotionLink" href="#" target="_blank">Open in Notion ↗</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">Copied</div>
 
 <div class="shell">
 
@@ -559,6 +837,9 @@ const DB_IDS = {
   workflow:  'd5abedb0-18d4-454d-9693-ad0e9de86b76',
   tasks:     '78571267-6982-4ba0-af54-f1c8a5f8a58d',
   knowledge: 'c01be0e7-3e28-4b4d-afd8-794fc89f57a7',
+  layers:    '3d09e2b5-0b24-4bf9-806c-34a45a0ee0a5',
+  systems:   '04f6301c-54e2-42e7-9527-28151a1bf259',
+  os_state:  null, // created in Phase 2 — Layer Switcher
 };
 
 const PROXY = '/api/notion';// see setup note below
@@ -637,6 +918,305 @@ async function queryDB(dbId, sorts, filter) {
   return null;
 }
 
+async function fetchPageBlocks(pageId) {
+  try {
+    const res = await fetch(`${PROXY}?path=blocks/${pageId}/children`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${TOKEN}`,
+        'Notion-Version': '2022-06-28',
+      },
+    });
+    if (res.ok) return await res.json();
+  } catch(e) { console.error('Blocks fetch error:', e); }
+  return null;
+}
+
+// ── POPUP SYSTEM ──────────────────────────────────────────────────
+// Stores the currently-open entry so footer buttons can act on it.
+let CURRENT_ENTRY = null; // { page, type, plainTextBody, plainTextFull }
+
+function openEntryPopup(pageId, type = 'ledger') {
+  // Find the page object from any loaded list — we keep references during sync.
+  const page = LOADED_PAGES[pageId];
+  if (!page) { showToast('Entry not loaded — re-sync and try again'); return; }
+
+  const popup = document.getElementById('entryPopup');
+  popup.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Header
+  const labelMap = {
+    ledger: 'Ledger Entry', prompt: 'Prompt', workflow: 'Workflow',
+    task: 'Task', knowledge: 'Knowledge', system: 'System', layer: 'Layer',
+  };
+  document.getElementById('popupEyebrow').textContent = labelMap[type] || 'Entry';
+  document.getElementById('popupTitle').textContent = getTitle(page);
+  document.getElementById('popupTags').innerHTML = renderPopupTags(page);
+  document.getElementById('popupNotionLink').href = page.url || '#';
+
+  // Body — loading state, then fetch
+  const bodyEl = document.getElementById('popupBody');
+  bodyEl.innerHTML = '<div class="popup-loading"><div class="spinner"></div><span>Loading entry…</span></div>';
+
+  CURRENT_ENTRY = { page, type, plainTextBody: '', plainTextFull: '' };
+
+  fetchPageBlocks(pageId).then(blocksData => {
+    const blocks = (blocksData && blocksData.results) || [];
+    const bodyHtml = renderBlocks(blocks);
+    const propsHtml = renderPopupProps(page);
+
+    bodyEl.innerHTML = `
+      ${propsHtml}
+      <div class="popup-section">
+        <div class="popup-section-label">Content</div>
+        <div class="popup-blocks">${bodyHtml || '<div class="popup-empty-body">No body content — all data is in properties above.</div>'}</div>
+      </div>
+    `;
+
+    // Cache plaintext for copy actions
+    CURRENT_ENTRY.plainTextBody = blocksToPlainText(blocks);
+    CURRENT_ENTRY.plainTextFull = buildFullEntryText(page, CURRENT_ENTRY.plainTextBody, type);
+  });
+}
+
+function closePopup() {
+  document.getElementById('entryPopup').classList.remove('active');
+  document.body.style.overflow = '';
+  CURRENT_ENTRY = null;
+}
+
+function copyCurrentEntry() {
+  if (!CURRENT_ENTRY) return;
+  copyText(CURRENT_ENTRY.plainTextFull, 'Entry copied');
+}
+
+function copyCurrentBodyOnly() {
+  if (!CURRENT_ENTRY) return;
+  copyText(CURRENT_ENTRY.plainTextBody || '(no body content)', 'Body copied');
+}
+
+function copyText(text, label) {
+  navigator.clipboard.writeText(text).then(
+    () => showToast(label || 'Copied'),
+    () => showToast('Copy failed — select manually')
+  );
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// Esc to close popup
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const popup = document.getElementById('entryPopup');
+    if (popup && popup.classList.contains('active')) closePopup();
+  }
+});
+
+// Page cache — populated during sync. Keyed by Notion page id.
+const LOADED_PAGES = {};
+function cachePage(page) { if (page && page.id) LOADED_PAGES[page.id] = page; }
+
+// ── POPUP RENDERERS ───────────────────────────────────────────────
+function renderPopupTags(page) {
+  const date = getDate(page, 'Date') || getDate(page, 'Created') || '';
+  const domain = getProp(page, 'Domain') || '';
+  const layer = getProp(page, 'Layer') || '';
+  const phase = getProp(page, 'Phase') || '';
+  const type = getProp(page, 'Entry Type') || getProp(page, 'Type') || '';
+  const tags = [];
+  if (date) tags.push(`<span class="popup-tag tag-date">${esc(date)}</span>`);
+  if (layer) tags.push(`<span class="popup-tag tag-layer">${esc(layer)}</span>`);
+  if (domain) tags.push(`<span class="popup-tag tag-domain">${esc(domain)}</span>`);
+  if (phase) tags.push(`<span class="popup-tag tag-phase">${esc(phase)}</span>`);
+  if (type) tags.push(`<span class="popup-tag">${esc(type)}</span>`);
+  return tags.join('');
+}
+
+// Renders all non-empty properties as a metadata grid (skipping ones already in the header tags)
+function renderPopupProps(page) {
+  const HEADER_KEYS = new Set(['Date','Domain','Layer','Phase','Entry Type','Type','Created']);
+  const rows = [];
+  for (const key of Object.keys(page.properties || {})) {
+    if (HEADER_KEYS.has(key)) continue;
+    const p = page.properties[key];
+    if (!p || p.type === 'title') continue; // title already in header
+    const val = readAnyProp(p);
+    if (!val || val.length === 0) continue;
+    rows.push(`<div class="popup-prop">
+      <div class="popup-prop-label">${esc(key)}</div>
+      <div class="popup-prop-value">${esc(val)}</div>
+    </div>`);
+  }
+  if (!rows.length) return '';
+  return `<div class="popup-section">
+    <div class="popup-section-label">Metadata</div>
+    <div class="popup-prop-grid">${rows.join('')}</div>
+  </div>`;
+}
+
+// Reads any property type to a display string (best-effort)
+function readAnyProp(p) {
+  if (!p) return '';
+  switch (p.type) {
+    case 'select': return p.select?.name || '';
+    case 'multi_select': return (p.multi_select || []).map(s => s.name).join(', ');
+    case 'status': return p.status?.name || '';
+    case 'rich_text': return (p.rich_text || []).map(t => t.plain_text).join('');
+    case 'number': return p.number == null ? '' : String(p.number);
+    case 'date': return p.date ? p.date.start : '';
+    case 'created_time': return new Date(p.created_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    case 'last_edited_time': return new Date(p.last_edited_time).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    case 'checkbox': return p.checkbox ? 'Yes' : 'No';
+    case 'url': return p.url || '';
+    case 'email': return p.email || '';
+    case 'phone_number': return p.phone_number || '';
+    case 'people': return (p.people || []).map(u => u.name || 'User').join(', ');
+    case 'relation': return (p.relation || []).length ? `${p.relation.length} linked` : '';
+    case 'formula':
+      const f = p.formula;
+      if (!f) return '';
+      return f.string || (f.number != null ? String(f.number) : '') || (f.date ? f.date.start : '');
+    case 'rollup':
+      const r = p.rollup;
+      if (!r) return '';
+      if (r.array) return r.array.map(x => readAnyProp(x)).filter(Boolean).join(', ');
+      return r.number != null ? String(r.number) : '';
+    default: return '';
+  }
+}
+
+// Render Notion blocks to HTML (covers most common block types)
+function renderBlocks(blocks) {
+  let html = '';
+  let listOpen = null; // 'ul' or 'ol'
+  const closeList = () => { if (listOpen) { html += `</${listOpen}>`; listOpen = null; } };
+
+  for (const b of blocks) {
+    const rt = (key) => richTextToHtml(b[key]?.rich_text || []);
+    switch (b.type) {
+      case 'paragraph': {
+        closeList();
+        const txt = rt('paragraph');
+        html += txt ? `<p>${txt}</p>` : '<p>&nbsp;</p>';
+        break;
+      }
+      case 'heading_1': closeList(); html += `<h1>${rt('heading_1')}</h1>`; break;
+      case 'heading_2': closeList(); html += `<h2>${rt('heading_2')}</h2>`; break;
+      case 'heading_3': closeList(); html += `<h3>${rt('heading_3')}</h3>`; break;
+      case 'bulleted_list_item': {
+        if (listOpen !== 'ul') { closeList(); html += '<ul>'; listOpen = 'ul'; }
+        html += `<li>${rt('bulleted_list_item')}</li>`;
+        break;
+      }
+      case 'numbered_list_item': {
+        if (listOpen !== 'ol') { closeList(); html += '<ol>'; listOpen = 'ol'; }
+        html += `<li>${rt('numbered_list_item')}</li>`;
+        break;
+      }
+      case 'to_do': {
+        closeList();
+        const checked = b.to_do?.checked;
+        html += `<div class="nb-todo ${checked?'done':''}"><div class="box"></div><span>${rt('to_do')}</span></div>`;
+        break;
+      }
+      case 'quote': closeList(); html += `<div class="nb-quote">${rt('quote')}</div>`; break;
+      case 'code': {
+        closeList();
+        const code = (b.code?.rich_text || []).map(t => t.plain_text).join('');
+        html += `<div class="nb-code">${esc(code)}</div>`;
+        break;
+      }
+      case 'divider': closeList(); html += '<div class="nb-divider"></div>'; break;
+      case 'callout': closeList(); html += `<div class="nb-quote">${rt('callout')}</div>`; break;
+      case 'toggle': closeList(); html += `<p><strong>▸ ${rt('toggle')}</strong></p>`; break;
+      default:
+        // Unknown block type — skip silently
+        break;
+    }
+  }
+  closeList();
+  return html;
+}
+
+function richTextToHtml(items) {
+  return (items || []).map(t => {
+    let s = esc(t.plain_text || '');
+    const a = t.annotations || {};
+    if (a.code) s = `<code>${s}</code>`;
+    if (a.bold) s = `<strong>${s}</strong>`;
+    if (a.italic) s = `<em>${s}</em>`;
+    if (a.strikethrough) s = `<s>${s}</s>`;
+    if (a.underline) s = `<u>${s}</u>`;
+    if (t.href) s = `<a href="${esc(t.href)}" target="_blank" rel="noopener">${s}</a>`;
+    return s;
+  }).join('');
+}
+
+// Plain-text version of blocks for clipboard copy
+function blocksToPlainText(blocks) {
+  const lines = [];
+  let listIndex = 0;
+  for (const b of blocks) {
+    const rt = (key) => (b[key]?.rich_text || []).map(t => t.plain_text).join('');
+    switch (b.type) {
+      case 'paragraph': lines.push(rt('paragraph')); break;
+      case 'heading_1': lines.push(''); lines.push('## ' + rt('heading_1')); break;
+      case 'heading_2': lines.push(''); lines.push('### ' + rt('heading_2')); break;
+      case 'heading_3': lines.push(''); lines.push('#### ' + rt('heading_3')); break;
+      case 'bulleted_list_item': lines.push('- ' + rt('bulleted_list_item')); break;
+      case 'numbered_list_item': listIndex++; lines.push(`${listIndex}. ` + rt('numbered_list_item')); break;
+      case 'to_do': {
+        const c = b.to_do?.checked ? '[x]' : '[ ]';
+        lines.push(`${c} ` + rt('to_do'));
+        break;
+      }
+      case 'quote': lines.push('> ' + rt('quote')); break;
+      case 'code': lines.push('```'); lines.push((b.code?.rich_text || []).map(t => t.plain_text).join('')); lines.push('```'); break;
+      case 'divider': lines.push('---'); break;
+      case 'callout': lines.push('> ' + rt('callout')); break;
+      case 'toggle': lines.push('▸ ' + rt('toggle')); break;
+    }
+    if (b.type !== 'numbered_list_item') listIndex = 0;
+  }
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Builds the full copy-paste entry using the Ledger Template structure
+function buildFullEntryText(page, bodyText, type) {
+  const title = getTitle(page);
+  const lines = [];
+  if (type === 'ledger') {
+    lines.push('LEDGER ENTRY');
+    lines.push('─────────────────────────────────────────────');
+    lines.push('');
+    lines.push(`Entry Title: ${title}`);
+  } else {
+    lines.push(title.toUpperCase());
+    lines.push('─────────────────────────────────────────────');
+  }
+  // All properties
+  for (const key of Object.keys(page.properties || {})) {
+    const p = page.properties[key];
+    if (!p || p.type === 'title') continue;
+    const val = readAnyProp(p);
+    if (val) lines.push(`${key}: ${val}`);
+  }
+  if (bodyText) {
+    lines.push('');
+    lines.push(bodyText);
+  }
+  lines.push('');
+  lines.push('─────────────────────────────────────────────');
+  return lines.join('\n');
+}
+
 // ── SYNC ALL ─────────────────────────────────────────────────────
 async function syncAll() {
   if (!TOKEN && !demoMode) return;
@@ -683,21 +1263,23 @@ async function loadLedger() {
 
   document.getElementById('stat-ledger').textContent = data.results.length + (data.has_more ? '+' : '');
 
+  // Cache every page so popup can look it up by id
+  data.results.forEach(cachePage);
+
   const rows = data.results.map(p => {
     const title = getTitle(p);
     const date = getDate(p, 'Date') || getDate(p, 'Created') || '';
     const type = getProp(p, 'Entry Type') || getProp(p, 'Type') || '';
     const layer = getProp(p, 'Layer') || '';
-    const url = p.url;
     const badge = entryBadge(type);
-    return `<a href="${url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','ledger')">
       <div class="entry-icon" style="background:rgba(200,245,66,0.08);">📓</div>
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${date}${layer ? ' · ' + esc(layer) : ''}</div>
       </div>
       <div class="entry-right">${badge}</div>
-    </a>`;
+    </div>`;
   }).join('');
 
   listEl.innerHTML = rows || '<div class="empty-state">No entries found</div>';
@@ -705,13 +1287,13 @@ async function loadLedger() {
     const title = getTitle(p);
     const date = getDate(p, 'Date') || getDate(p, 'Created') || '';
     const type = getProp(p, 'Entry Type') || getProp(p, 'Type') || '';
-    return `<a href="${p.url}" target="_blank" class="entry-row">
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','ledger')">
       <div class="entry-body">
         <div class="entry-title">${esc(title)}</div>
         <div class="entry-meta">${date}</div>
       </div>
       ${entryBadge(type)}
-    </a>`;
+    </div>`;
   }).join('') || '<div class="empty-state">No entries</div>';
 }
 
