@@ -717,6 +717,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Systems & Automation
       </a>
+      <a class="nav-item" onclick="showSection('paperclip')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10.5V19a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h8.5"/><path d="M16 3l5 5-9 9H7v-5l9-9z"/></svg>
+        Paperclip Control
+      </a>
     </div>
 
     <div class="nav-section">
@@ -877,6 +881,64 @@
       <div class="scroll-list" id="systems-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading systems...</span></div></div>
     </section>
 
+    <!-- PAPERCLIP CONTROL PANEL -->
+    <section class="section" id="section-paperclip">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Paperclip Control Panel</div>
+          <div class="section-sub">Agents, issues, budget, heartbeats — VM at 136.113.209.144:3100</div>
+        </div>
+        <button class="popup-btn" onclick="configurePaperclip()" style="font-family: var(--font-mono);">⚙ Configure</button>
+      </div>
+
+      <!-- Setup state — shown when token or company ID missing -->
+      <div id="paperclip-setup" style="display:none;">
+        <div class="card" style="max-width: 540px;">
+          <h3 style="font-family: var(--font-head); font-size: 16px; font-weight: 600; margin-bottom: 6px;">Connect to Paperclip</h3>
+          <p style="font-size: 12px; color: var(--text2); margin-bottom: 16px; line-height: 1.6;">
+            We need two things to read from your VM:<br>
+            1) A bearer token (your agent JWT, or a board-session token if you have one)<br>
+            2) Your company ID (found in any agent URL, or via <code style="background:var(--bg3); padding:1px 4px; border-radius:3px;">paperclipai company list</code>)
+          </p>
+          <input id="pc-token-input" type="password" placeholder="Bearer token (JWT or API key)" autocomplete="off"
+            style="width:100%; background:var(--bg3); border:1px solid var(--border-hi); border-radius:var(--radius); padding:10px 14px; color:var(--text); font-family:var(--font-mono); font-size:12px; outline:none; margin-bottom:8px;" />
+          <input id="pc-company-input" type="text" placeholder="Company ID (UUID)" autocomplete="off"
+            style="width:100%; background:var(--bg3); border:1px solid var(--border-hi); border-radius:var(--radius); padding:10px 14px; color:var(--text); font-family:var(--font-mono); font-size:12px; outline:none; margin-bottom:14px;" />
+          <div style="display:flex; gap:10px;">
+            <button class="btn-primary" onclick="savePaperclipConfig()">Connect</button>
+            <button class="btn-secondary" onclick="testPaperclipConnection()">Test without saving</button>
+          </div>
+          <div id="pc-test-result" style="margin-top:14px; font-size:11px; color:var(--text3); font-family:var(--font-mono); white-space:pre-wrap;"></div>
+        </div>
+      </div>
+
+      <!-- Connected state — shown when configured -->
+      <div id="paperclip-content" style="display:none;">
+        <!-- Aggregate health strip -->
+        <div class="card" style="padding:14px 18px; margin-bottom:14px;">
+          <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+            <div style="font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em;">Heartbeats</div>
+            <div id="paperclip-heartbeats-strip" style="display:flex; gap:6px; align-items:center;">—</div>
+            <div style="flex:1;"></div>
+            <div style="font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em;">Aggregate budget</div>
+            <div id="paperclip-budget-aggregate" style="font-family:var(--font-head); font-size:14px; font-weight:600; color:var(--text);">—</div>
+          </div>
+        </div>
+
+        <!-- Agent grid -->
+        <div class="card" style="margin-bottom:14px;">
+          <div style="font-size:12px; color:var(--text3); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.08em;">Agents</div>
+          <div class="scroll-list" id="paperclip-agents-list"><div class="loading-state"><div class="spinner"></div><span>Loading agents...</span></div></div>
+        </div>
+
+        <!-- Issue feed -->
+        <div class="card">
+          <div style="font-size:12px; color:var(--text3); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.08em;">Open Issues</div>
+          <div class="scroll-list" id="paperclip-issues-list"><div class="loading-state"><div class="spinner"></div><span>Loading issues...</span></div></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -910,6 +972,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (TOKEN) {
     closeModal();
     syncAll();
+  }
+  initPaperclip();
+  if (PAPERCLIP_TOKEN && PAPERCLIP_COMPANY_ID) {
+    loadPaperclipAll();
+    startPaperclipAutoRefresh();
   }
 });
 
@@ -1304,6 +1371,9 @@ async function syncAll() {
     loadSystems(),
   ]);
 
+  // Paperclip sync runs in parallel but only if configured (no token = no call).
+  if (PAPERCLIP_TOKEN && PAPERCLIP_COMPANY_ID) loadPaperclipAll();
+
   const now = new Date();
   document.getElementById('lastSyncLabel').textContent =
     'Synced ' + now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
@@ -1569,6 +1639,271 @@ async function loadSystems() {
       <div class="entry-right">${status ? `<span class="badge badge-build">${esc(status)}</span>` : '<span style="font-size:16px; color: var(--text3);">↗</span>'}</div>
     </div>`;
   }).join('') || '<div class="empty-state">No systems found</div>';
+}
+
+// ── PAPERCLIP CONTROL PANEL ───────────────────────────────────────
+// Reads from your VM via /api/paperclip serverless proxy.
+// One service helper (paperclipFetch), two loaders (agents + issues).
+// Heartbeats and budget are derived from the agents response — same data, different view.
+
+const PAPERCLIP_PROXY = '/api/paperclip';
+let PAPERCLIP_TOKEN = '';
+let PAPERCLIP_COMPANY_ID = '';
+let PAPERCLIP_REFRESH_TIMER = null;
+
+// Service helper — every Paperclip call goes through this.
+async function paperclipFetch(path, options = {}) {
+  const url = `${PAPERCLIP_PROXY}?path=${encodeURIComponent(path)}`;
+  try {
+    const res = await fetch(url, {
+      method: options.method || 'GET',
+      headers: {
+        ...(PAPERCLIP_TOKEN && { 'Authorization': `Bearer ${PAPERCLIP_TOKEN}` }),
+        'Content-Type': 'application/json',
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+    let data = null;
+    try { data = await res.json(); } catch { /* non-JSON */ }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 0, data: null, error: err.message };
+  }
+}
+
+// Load saved config on boot, route to setup or content view.
+function initPaperclip() {
+  PAPERCLIP_TOKEN = localStorage.getItem('paperclip_token') || '';
+  PAPERCLIP_COMPANY_ID = localStorage.getItem('paperclip_company_id') || '';
+  renderPaperclipState();
+}
+
+function renderPaperclipState() {
+  const setup = document.getElementById('paperclip-setup');
+  const content = document.getElementById('paperclip-content');
+  if (!setup || !content) return;
+  if (PAPERCLIP_TOKEN && PAPERCLIP_COMPANY_ID) {
+    setup.style.display = 'none';
+    content.style.display = 'block';
+  } else {
+    setup.style.display = 'block';
+    content.style.display = 'none';
+    // Pre-fill any partial config
+    const tEl = document.getElementById('pc-token-input');
+    const cEl = document.getElementById('pc-company-input');
+    if (tEl && PAPERCLIP_TOKEN) tEl.value = PAPERCLIP_TOKEN;
+    if (cEl && PAPERCLIP_COMPANY_ID) cEl.value = PAPERCLIP_COMPANY_ID;
+  }
+}
+
+function configurePaperclip() {
+  // Force the setup view even if already configured (to allow reconfigure).
+  PAPERCLIP_TOKEN = '';
+  PAPERCLIP_COMPANY_ID = '';
+  renderPaperclipState();
+  showSection('paperclip');
+  // Restore inputs from storage for editing convenience
+  const tEl = document.getElementById('pc-token-input');
+  const cEl = document.getElementById('pc-company-input');
+  if (tEl) tEl.value = localStorage.getItem('paperclip_token') || '';
+  if (cEl) cEl.value = localStorage.getItem('paperclip_company_id') || '';
+}
+
+function savePaperclipConfig() {
+  const token = document.getElementById('pc-token-input').value.trim();
+  const companyId = document.getElementById('pc-company-input').value.trim();
+  if (!token || !companyId) {
+    document.getElementById('pc-test-result').textContent = 'Both fields required.';
+    return;
+  }
+  PAPERCLIP_TOKEN = token;
+  PAPERCLIP_COMPANY_ID = companyId;
+  localStorage.setItem('paperclip_token', token);
+  localStorage.setItem('paperclip_company_id', companyId);
+  renderPaperclipState();
+  loadPaperclipAll();
+  startPaperclipAutoRefresh();
+}
+
+// Diagnostic: try a known endpoint without committing the config.
+async function testPaperclipConnection() {
+  const token = document.getElementById('pc-token-input').value.trim();
+  const companyId = document.getElementById('pc-company-input').value.trim();
+  const out = document.getElementById('pc-test-result');
+  if (!token || !companyId) { out.textContent = 'Fill both fields first.'; return; }
+  out.textContent = 'Testing…';
+  // Temporarily set token for the test call
+  const prev = PAPERCLIP_TOKEN;
+  PAPERCLIP_TOKEN = token;
+  const result = await paperclipFetch(`companies/${companyId}/agents`);
+  PAPERCLIP_TOKEN = prev;
+  if (result.ok) {
+    const count = Array.isArray(result.data) ? result.data.length : (result.data?.agents?.length ?? '?');
+    out.textContent = `✓ Connected (HTTP ${result.status}). Agents returned: ${count}`;
+  } else {
+    out.textContent = `✗ HTTP ${result.status}${result.error ? ' — ' + result.error : ''}\n${result.data ? JSON.stringify(result.data, null, 2).slice(0, 600) : ''}`;
+  }
+}
+
+// Pull agents + issues in parallel, then render all four views from that data.
+async function loadPaperclipAll() {
+  if (!PAPERCLIP_TOKEN || !PAPERCLIP_COMPANY_ID) return;
+  const [agentsRes, issuesRes] = await Promise.all([
+    paperclipFetch(`companies/${PAPERCLIP_COMPANY_ID}/agents`),
+    paperclipFetch(`companies/${PAPERCLIP_COMPANY_ID}/issues`),
+  ]);
+  renderPaperclipAgents(agentsRes);
+  renderPaperclipIssues(issuesRes);
+  renderPaperclipHeartbeats(agentsRes);
+  renderPaperclipBudget(agentsRes);
+}
+
+// Normalize the agents response — Paperclip may return an array or a wrapped object.
+function extractList(res, keys = ['agents','issues','data','items','results']) {
+  if (!res || !res.data) return [];
+  if (Array.isArray(res.data)) return res.data;
+  for (const k of keys) if (Array.isArray(res.data[k])) return res.data[k];
+  return [];
+}
+
+function renderPaperclipAgents(res) {
+  const el = document.getElementById('paperclip-agents-list');
+  if (!res.ok) {
+    el.innerHTML = `<div class="empty-state">Could not load agents (HTTP ${res.status})${res.error ? ' — ' + esc(res.error) : ''}<br><span style="font-size:10px;">Try Reconfigure if auth changed.</span></div>`;
+    return;
+  }
+  const agents = extractList(res, ['agents']);
+  if (!agents.length) { el.innerHTML = '<div class="empty-state">No agents yet</div>'; return; }
+  el.innerHTML = agents.map(a => {
+    const name = a.name || a.title || a.role || a.id || 'Agent';
+    const role = a.role || a.title || a.adapter || a.adapterType || '';
+    const status = a.status || a.state || '';
+    const hbAgo = humanizeAgo(a.lastHeartbeatAt || a.lastHeartbeat || a.last_heartbeat_at);
+    const budgetPct = computeBudgetPct(a);
+    const budgetBar = budgetPct !== null
+      ? `<div style="display:flex; align-items:center; gap:8px; min-width:120px;">
+          <div style="flex:1; height:4px; background:rgba(255,255,255,0.08); border-radius:99px; overflow:hidden;">
+            <div style="height:100%; width:${budgetPct}%; background:${budgetPct >= 90 ? 'var(--red)' : budgetPct >= 80 ? 'var(--accent3)' : 'var(--accent)'};"></div>
+          </div>
+          <span style="font-size:11px; color:var(--text3); font-family:var(--font-mono); min-width:32px; text-align:right;">${budgetPct}%</span>
+        </div>` : '';
+    return `<div class="entry-row">
+      <div class="entry-icon" style="background:rgba(124,106,247,0.1);">🤖</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(name)}</div>
+        <div class="entry-meta">${esc(role)}${hbAgo ? ' · last hb ' + hbAgo : ''}</div>
+      </div>
+      <div class="entry-right" style="display:flex; align-items:center; gap:10px;">
+        ${budgetBar}
+        ${status ? `<span class="badge ${badgeClassForAgentStatus(status)}">${esc(status)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPaperclipIssues(res) {
+  const el = document.getElementById('paperclip-issues-list');
+  if (!res.ok) {
+    el.innerHTML = `<div class="empty-state">Could not load issues (HTTP ${res.status})${res.error ? ' — ' + esc(res.error) : ''}</div>`;
+    return;
+  }
+  const issues = extractList(res, ['issues']);
+  // Filter to open-ish states + sort by age (oldest first — oldest tickets need attention)
+  const open = issues.filter(i => {
+    const s = (i.status || i.state || '').toLowerCase();
+    return s !== 'done' && s !== 'closed' && s !== 'cancelled' && s !== 'canceled';
+  });
+  open.sort((a, b) => new Date(a.createdAt || a.created_at || 0) - new Date(b.createdAt || b.created_at || 0));
+  if (!open.length) { el.innerHTML = '<div class="empty-state">No open issues</div>'; return; }
+  el.innerHTML = open.map(i => {
+    const title = i.title || i.name || i.id;
+    const status = i.status || i.state || '';
+    const assignee = i.assigneeAgentId || i.assignee || '';
+    const ageDays = humanizeAgo(i.createdAt || i.created_at);
+    return `<div class="entry-row">
+      <div class="entry-icon" style="background:rgba(247,162,106,0.08);">🎫</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${ageDays ? 'opened ' + ageDays : ''}${assignee ? ' · ' + esc(String(assignee).slice(0, 8)) : ''}</div>
+      </div>
+      <div class="entry-right">${status ? `<span class="badge badge-review">${esc(status)}</span>` : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPaperclipHeartbeats(res) {
+  const el = document.getElementById('paperclip-heartbeats-strip');
+  if (!res.ok) { el.textContent = '—'; return; }
+  const agents = extractList(res, ['agents']);
+  if (!agents.length) { el.textContent = 'no agents'; return; }
+  el.innerHTML = agents.map(a => {
+    const last = a.lastHeartbeatAt || a.lastHeartbeat || a.last_heartbeat_at;
+    const secsAgo = last ? (Date.now() - new Date(last).getTime()) / 1000 : Infinity;
+    const color = secsAgo <= 120 ? 'var(--teal)' : secsAgo <= 300 ? 'var(--accent3)' : 'var(--red)';
+    const name = a.name || a.title || 'agent';
+    return `<span title="${esc(name)} — ${last ? new Date(last).toLocaleTimeString() : 'never'}" style="width:9px; height:9px; border-radius:50%; background:${color}; box-shadow:0 0 6px ${color}; display:inline-block;"></span>`;
+  }).join('');
+}
+
+function renderPaperclipBudget(res) {
+  const el = document.getElementById('paperclip-budget-aggregate');
+  if (!res.ok) { el.textContent = '—'; return; }
+  const agents = extractList(res, ['agents']);
+  if (!agents.length) { el.textContent = '—'; return; }
+  // Aggregate: sum used / sum limit if available
+  let used = 0, limit = 0, hasData = false;
+  for (const a of agents) {
+    const u = Number(a.budgetUsed ?? a.budget_used ?? a.usage ?? 0);
+    const l = Number(a.budgetLimit ?? a.budget_limit ?? a.limit ?? 0);
+    if (u > 0 || l > 0) hasData = true;
+    used += isFinite(u) ? u : 0;
+    limit += isFinite(l) ? l : 0;
+  }
+  if (!hasData) { el.textContent = 'no data'; return; }
+  if (limit > 0) {
+    const pct = Math.min(100, Math.round((used / limit) * 100));
+    el.innerHTML = `$${used.toFixed(2)} / $${limit.toFixed(2)} <span style="color:${pct >= 90 ? 'var(--red)' : pct >= 80 ? 'var(--accent3)' : 'var(--text2)'};">(${pct}%)</span>`;
+  } else {
+    el.innerHTML = `$${used.toFixed(2)}`;
+  }
+}
+
+// Helpers — small enough to stay inline.
+function humanizeAgo(iso) {
+  if (!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  if (isNaN(ms)) return '';
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + 's ago';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d + 'd ago';
+}
+
+function badgeClassForAgentStatus(s) {
+  const x = s.toLowerCase();
+  if (x.includes('running') || x.includes('active') || x.includes('ok')) return 'badge-active';
+  if (x.includes('paus')) return 'badge-review';
+  if (x.includes('error') || x.includes('fail')) return 'badge-decision';
+  return 'badge-review';
+}
+
+function computeBudgetPct(a) {
+  const used = Number(a.budgetUsed ?? a.budget_used ?? a.usage);
+  const limit = Number(a.budgetLimit ?? a.budget_limit ?? a.limit);
+  if (!isFinite(used) || !isFinite(limit) || limit <= 0) return null;
+  return Math.min(100, Math.round((used / limit) * 100));
+}
+
+function startPaperclipAutoRefresh() {
+  if (PAPERCLIP_REFRESH_TIMER) clearInterval(PAPERCLIP_REFRESH_TIMER);
+  // Paperclip heartbeats are every 30s — refresh dashboard data at the same cadence.
+  PAPERCLIP_REFRESH_TIMER = setInterval(() => {
+    if (PAPERCLIP_TOKEN && PAPERCLIP_COMPANY_ID) loadPaperclipAll();
+  }, 30000);
 }
 
 // ── DEMO DATA ─────────────────────────────────────────────────────
