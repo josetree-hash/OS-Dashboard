@@ -709,6 +709,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
         Prompt Ledger
       </a>
+      <a class="nav-item" onclick="showSection('layers')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Layer Control Panel
+      </a>
+      <a class="nav-item" onclick="showSection('systems')" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Systems & Automation
+      </a>
     </div>
 
     <div class="nav-section">
@@ -727,6 +735,8 @@
         <div>⬤ Next Tasks</div>
         <div>⬤ Knowledge Base</div>
         <div>⬤ Prompt Ledger</div>
+        <div>⬤ Layer Control Panel</div>
+        <div>⬤ Systems & Automation</div>
       </div>
       <div style="margin-top: 12px;">
         <button onclick="resetToken()" style="font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font-mono);">⚙ Reconfigure</button>
@@ -841,6 +851,30 @@
         <a href="https://www.notion.so/48c5e1820e364977bd095fb4f6765d58" target="_blank" class="notion-open">Open in Notion ↗</a>
       </div>
       <div class="scroll-list" id="prompt-ledger-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading Prompt Ledger...</span></div></div>
+    </section>
+
+    <!-- LAYER CONTROL PANEL -->
+    <section class="section" id="section-layers">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Layer Control Panel</div>
+          <div class="section-sub">All 11 operating modes — click to view full activation block</div>
+        </div>
+        <a href="https://www.notion.so/3d09e2b50b244bf9806c34a45a0ee0a5" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="layers-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading layers...</span></div></div>
+    </section>
+
+    <!-- SYSTEMS & AUTOMATION -->
+    <section class="section" id="section-systems">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Systems &amp; Automation</div>
+          <div class="section-sub">SOPs and repeatable processes</div>
+        </div>
+        <a href="https://www.notion.so/04f6301c54e242e7952728151a1bf259" target="_blank" class="notion-open">Open in Notion ↗</a>
+      </div>
+      <div class="scroll-list" id="systems-list" style="max-height: 70vh;"><div class="loading-state"><div class="spinner"></div><span>Loading systems...</span></div></div>
     </section>
 
   </main>
@@ -1266,6 +1300,8 @@ async function syncAll() {
     loadTasks(),
     loadKnowledge(),
     loadPromptLedger(),
+    loadLayers(),
+    loadSystems(),
   ]);
 
   const now = new Date();
@@ -1471,6 +1507,68 @@ async function loadPromptLedger() {
       <div class="entry-right"><span style="font-size:16px; color: var(--text3);">↗</span></div>
     </div>`;
   }).join('') || '<div class="empty-state">No entries found</div>';
+}
+
+// ── LAYER CONTROL PANEL ───────────────────────────────────────────
+// 11 operating modes. Activation block lives in the page body — popup surfaces it.
+async function loadLayers() {
+  const data = await queryDB(DB_IDS.layers);
+  const listEl = document.getElementById('layers-list');
+  if (!listEl) return;
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load layers.</div>'; return; }
+
+  data.results.forEach(cachePage);
+
+  // Sort by Layer Number if present, then alphabetically
+  const sorted = [...data.results].sort((a, b) => {
+    const na = getNumber(a, 'Layer Number') ?? getNumber(a, 'Number') ?? 999;
+    const nb = getNumber(b, 'Layer Number') ?? getNumber(b, 'Number') ?? 999;
+    if (na !== nb) return na - nb;
+    return getTitle(a).localeCompare(getTitle(b));
+  });
+
+  listEl.innerHTML = sorted.map(p => {
+    const title = getTitle(p);
+    const role = getProp(p, 'AI Role') || getProp(p, 'Role') || '';
+    const status = getProp(p, 'Status') || '';
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','layer')">
+      <div class="entry-icon" style="background:rgba(200,245,66,0.08);">⬢</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${esc(role)}</div>
+      </div>
+      <div class="entry-right">${status ? `<span class="badge badge-active">${esc(status)}</span>` : '<span style="font-size:16px; color: var(--text3);">↗</span>'}</div>
+    </div>`;
+  }).join('') || '<div class="empty-state">No layers found</div>';
+}
+
+// ── SYSTEMS & AUTOMATION ──────────────────────────────────────────
+// SOPs and repeatable processes.
+async function loadSystems() {
+  const data = await queryDB(DB_IDS.systems);
+  const listEl = document.getElementById('systems-list');
+  if (!listEl) return;
+  if (!data || !data.results) { listEl.innerHTML = '<div class="empty-state">Could not load systems.</div>'; return; }
+
+  data.results.forEach(cachePage);
+
+  listEl.innerHTML = data.results.map(p => {
+    const title = getTitle(p);
+    const status = getProp(p, 'Status') || '';
+    const category = getProp(p, 'Category') || getProp(p, 'Type') || getProp(p, 'Domain') || '';
+    const trigger = getProp(p, 'Trigger') || '';
+    const metaParts = [];
+    if (category) metaParts.push(esc(category));
+    if (trigger) metaParts.push('Trigger: ' + esc(trigger));
+    return `<div class="entry-row" onclick="openEntryPopup('${p.id}','system')">
+      <div class="entry-icon" style="background:rgba(247,162,106,0.08);">🔧</div>
+      <div class="entry-body">
+        <div class="entry-title">${esc(title)}</div>
+        <div class="entry-meta">${metaParts.join(' · ')}</div>
+      </div>
+      <div class="entry-right">${status ? `<span class="badge badge-build">${esc(status)}</span>` : '<span style="font-size:16px; color: var(--text3);">↗</span>'}</div>
+    </div>`;
+  }).join('') || '<div class="empty-state">No systems found</div>';
 }
 
 // ── DEMO DATA ─────────────────────────────────────────────────────
